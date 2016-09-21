@@ -4,24 +4,26 @@
 \alias{projectPoints}
 \title{Project lat-lon points}
 \usage{
-projectPoints(lat, long, from = pll(), to = putm(long = long),
-  drop = FALSE, dfout = TRUE, quiet = FALSE)
+projectPoints(lat, long, data, from = pll(), to = putm(long = long),
+  spout = FALSE, dfout = TRUE, drop = FALSE, quiet = FALSE)
 }
 \arguments{
-\item{lat}{A vector of latitudes}
+\item{lat, long}{Latitude (North/South) and longitude (East/West) coordinates in decimal degrees}
 
-\item{long}{A vector of longitudes}
+\item{data}{Optional: data.frame with the columns \code{lat} and \code{long}}
 
 \item{from}{Original Projection CRS (do not change for latlong-coordinates).
-DEFAULT: pll() = sp::CRS("+proj=longlat +datum=WGS84")}
+DEFAULT: \code{\link{pll}()} = sp::CRS("+proj=longlat +datum=WGS84")}
 
 \item{to}{target projection CRS (Coordinate Reference System) Object.
 Other projections can be specified as sp::CRS("your_proj4_character_string").
-DEFAULT: putm(long=long)}
+DEFAULT: \code{\link{putm}(long=long)}}
 
-\item{drop}{Drop to lowest dimension? DEFAULT: FALSE (unlike \code{\link[OpenStreetMap]{projectMercator}})}
+\item{spout}{Return the original \code{\link[sp]{spTransform}} output instead of coordinates only? DEFAULT: FALSE}
 
 \item{dfout}{Convert output to data.frame to allow easier indexing? DEFAULT: TRUE}
+
+\item{drop}{Drop to lowest dimension? DEFAULT: FALSE (unlike \code{\link[OpenStreetMap]{projectMercator}})}
 
 \item{quiet}{Suppress warning about NA coordinates? DEFAULT: FALSE}
 }
@@ -54,18 +56,18 @@ d$VALUES <- berryFunctions::rescale(d$N, 20,40) + rnorm(50, sd=5)
 head(d)
 c1 <- projectPoints(lat=d$N, long=d$E-33e6, to=pll(),
           from=sp::CRS("+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs") )
-c2 <- projectPoints(c1$y, c1$x, to=posm() )
+c2 <- projectPoints(y, x, data=c1, to=posm() )
 head(c1)
 head(c2)
 
 \donttest{
-map <- pointsMap(c1, "x", "y", plot=FALSE)
+map <- pointsMap(y,x, c1, plot=FALSE)
 pdf("ETRS89.pdf")
 par(mar=c(0,0,0,0))
 plot(map)
 rect(par("usr")[1], par("usr")[3], par("usr")[2], par("usr")[4],
      col=berryFunctions::addAlpha("white", 0.7))
-scaleBar(map, y=0.2)
+scaleBar(map, y=0.2, abslen=100)
 points(c2)
 berryFunctions::colPoints(c2$x, c2$y, d$VALUE )
 dev.off()

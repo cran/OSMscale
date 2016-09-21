@@ -7,7 +7,7 @@
 #' @seealso \code{\link{projectPoints}}, \code{OpenStreetMap::\link[OpenStreetMap]{openmap}}
 #' @keywords hplot spatial
 #' @importFrom grDevices extendrange
-#' @importFrom berryFunctions owa
+#' @importFrom berryFunctions owa getColumn
 #' @importFrom OpenStreetMap openmap openproj osm
 #' @importFrom sp CRS
 #' @importFrom graphics points
@@ -21,20 +21,20 @@
 #' 43.227785, -123.368694
 #' 43.232649, -123.355895")
 #'
-#' map <- pointsMap(d, scale=list(ndiv=5), col="orange", pch=3, lwd=3)
-#' map_utm <- pointsMap(d, map=map, utm=TRUE)
+#' map <- pointsMap(lat, long, data=d)
+#' map_utm <- pointsMap(lat, long, d, map=map, utm=TRUE)
 #' axis(1); axis(2) # now in meters
 #' projectPoints(d$lat, d$long)
 #' scaleBar(map_utm, x=0.2, y=0.8, unit="mi", type="line", col="red", length=0.25)
-#' pointsMap(d[1:2,], map=map_utm, add=TRUE, col="red", pch=3, lwd=3)
+#' pointsMap(lat, long, d[1:2,], map=map_utm, add=TRUE, col="red", pch=3, pargs=list(lwd=3))
 #'
 #' d <- data.frame(long=c(12.95, 12.98, 13.22, 13.11), lat=c(52.40,52.52, 52.36, 52.45))
-#' map <- pointsMap(d, type="bing") # aerial map
+#' map <- pointsMap(lat,long,d, type="bing") # aerial map
 #' }
 #'
-#' @param data Data.frame with coordinates
-#' @param x,y Names of columns in \code{data} containing longitude (East-West)
-#'            and latitude (North-South) coordinates. DEFAULT: "long","lat"
+#' @param lat,long Latitude (North/South) and longitude (East/West) coordinates in decimal degrees
+#' @param data Optional: data.frame with the columns \code{lat} and \code{long}
+#' @param ext Extension added in each direction if a single coordinate is given. DEFAULT: 0.07
 #' @param fx,fy Extend factors (additional map space around actual points)
 #'              passed to custom version of \code{\link{extendrange}}. DEFAULT: 0.05
 #' @param type Tile server in \code{\link[OpenStreetMap]{openmap}}
@@ -47,15 +47,17 @@
 #'             Only used if utm=TRUE. DEFAULT: \code{\link{putm}(long=long)}
 #' @param plot Logical: Should map be plotted and points added? DEFAULT: TRUE
 #' @param add Logical: add points to existing map? DEFAULT: FALSE
-#' @param scale FALSE to suppress scaleBar drawing, else:
-#'              List of arguments passed to \code{\link{scaleBar}}. DEFAULT: NULL
+#' @param scale Logical: should \code{\link{scaleBar}} be added? DEFAULT: TRUE
 #' @param quiet Logical: suppress progress messages? DEFAULT: FALSE
-#' @param \dots Further arguments passed to \code{\link{points}} like pch, lwd, col, ...
+#' @param pch,col,cex Arguments passed to \code{\link{points}}. DEFAULT: 3, "red", 1
+#' @param pargs List of arguments passed to \code{\link{points}} like lwd, type, cex...
+#' @param \dots Further arguments passed to \code{\link{scaleBar}} like abslen, ndiv, ...
 #'
 pointsMap <- function(
+lat,
+long,
 data,
-x="long",
-y="lat",
+ext=0.07,
 fx=0.05,
 fy=fx,
 type="osm",
@@ -67,24 +69,32 @@ utm=FALSE,
 proj=putm(long=long),
 plot=TRUE,
 add=FALSE,
-scale=NULL,
+scale=TRUE,
 quiet=FALSE,
+pch=3,
+col="red",
+cex=1,
+pargs=NULL,
 ...
 )
 {
-# Input processing:
-if(isTRUE(scale)) scale <- NULL
-long <- data[,x]
-lat  <- data[,y]
-# Data checks:
-if(is.null(long) | all(is.na(long)) ) stop("long could not be extracted from data")
-if(is.null(lat)  | all(is.na(lat))  ) stop("lat could not be extracted from data")
+# Input coordinates:
+if(!missing(data)) # get lat and long from data.frame
+  {
+  lat  <- getColumn(substitute(lat) , data)
+  long <- getColumn(substitute(long), data)
+  }
 checkLL(lat, long)
 # bounding box:
-# originally used extendrange for each direction separately
-extendrange2 <- function(x,f) range(x, na.rm=TRUE) + c(-f, f)*max(c(
-                  diff(range(lat, na.rm=TRUE)), diff(range(long, na.rm=TRUE)) ))
+dr <- function(x)
+  {
+  # if only a single point is given, add ext in each direction
+  if(length(x)==1) x <- x + c(-1,1)*ext
+  diff(range(x, na.rm=TRUE))
+  }
+extendrange2 <- function(x,f) range(x, na.rm=TRUE) + c(-f,f) * max(dr(lat),dr(long))
 bbox <- c(extendrange2(long, f=fx), extendrange2(lat, f=fy))
+#
 # actual map download:
 if(is.null(map))
   {
@@ -93,15 +103,9 @@ if(is.null(map))
     message("Downloading map with extend ", toString(round(bbox,6)), " ...")
     flush.console()
     }
-  suppressWarnings(
-           map <- OpenStreetMap::openmap(upperLeft=bbox[c(4,1)],
-                                        lowerRight=bbox[c(3,2)], type=type,
-                                        zoom=zoom, minNumTiles=minNumTiles,
-                                        mergeTiles=mergeTiles)  )
+  map <- OpenStreetMap::openmap(upperLeft=bbox[c(4,1)], lowerRight=bbox[c(3,2)],
+         type=type, zoom=zoom, minNumTiles=minNumTiles, mergeTiles=mergeTiles)
   }
-# suppress Warning In `[<-`(`*tmp*`, i, value = <S4 object of class "RasterStack">) :
-#                  implicit list embedding of S4 objects is deprecated
-# happening in R 3.3.1 with OpenStreetMap 0.3.2, 2015-10-06
 # optionally, projection
 if(utm & !quiet)
   {
@@ -112,10 +116,12 @@ if(utm) map <- OpenStreetMap::openproj(map, projection=proj)
 # optionally, plotting:
 if(plot)
 {
+if(!quiet) {message("Done. Now plotting..."); flush.console()}
 if(!add) plot(map, removeMargin=FALSE) # plot.OpenStreetMap -> plot.osmtile -> rasterImage
 pts <- projectPoints(lat,long, to=map$tiles[[1]]$projection)
-points(x=pts[,"x"], y=pts[,"y"], ...)
-if(is.null(scale)|is.list(scale)) do.call(scaleBar, berryFunctions::owa(list(map=map), scale))
+do.call(points, berryFunctions::owa(list(
+        x=pts[,"x"], y=pts[,"y"], pch=pch, col=col, cex=cex), pargs))
+if(scale) scaleBar(map=map, ...)
 }
 # output:
 return(invisible(map))

@@ -4,9 +4,9 @@
 \alias{scaleBar}
 \title{scalebar for OSM plots}
 \usage{
-scaleBar(map, x = 0.1, y = 0.9, length = 0.2, abslen = NA,
+scaleBar(map, x = 0.1, y = 0.9, length = 0.4, abslen = NA,
   unit = c("km", "m", "mi", "ft", "yd"), label = unit, type = c("bar",
-  "line"), ndiv = NULL, field = "rect", fill = NA, adj = c(0.5, 1.5),
+  "line"), ndiv = NA, field = "rect", fill = NA, adj = c(0.5, 1.5),
   cex = par("cex"), col = c("black", "white"), targs = NULL, lwd = 7,
   lend = 1, bg = "transparent", mar = c(2, 0.7, 0.2, 3), ...)
 }
@@ -15,7 +15,7 @@ scaleBar(map, x = 0.1, y = 0.9, length = 0.2, abslen = NA,
 
 \item{x, y}{Relative position of left end of scalebar. DEFAULT: 0.1, 0.9}
 
-\item{length}{Approximate relative length of bar. DEFAULT: 0.2}
+\item{length}{Approximate relative length of bar. DEFAULT: 0.4}
 
 \item{abslen}{Absolute length in \code{unit}s. DEFAULT: NA (computed internally from \code{length})}
 
@@ -27,11 +27,12 @@ Note that the returned absolute length is in m. DEFAULT: "km"}
 
 \item{type}{Scalebar type: simple \code{'line'} or classical black & white \code{'bar'}. DEFAULT: "bar"}
 
-\item{ndiv}{Number of divisions if \code{type="bar"}. DEFAULT: NULL (computed internally)
+\item{ndiv}{Number of divisions if \code{type="bar"}. DEFAULT: NA (computed internally)
 Internal selection of \code{ndiv} is based on divisibility of abslen
 (modulo) with 1:6. For ties, preferation order is 5>4>3>2>6>1.
 For maps with abslen=4000, this means 5 will be chosen,
-even though 4 is more appealing. A better algorithm would be welcome!}
+even though 4 is more appealing. if \code{abslen} is also missing
+(or in a certain set), a better default is chosen.}
 
 \item{field, fill, adj, cex}{Arguments passed to \code{\link[berryFunctions]{textField}}}
 
@@ -72,24 +73,24 @@ You might need to specify abslen manually with other projections where the axes 
 \examples{
 if(interactive()){
 d <- data.frame(long=c(12.95, 12.98, 13.22, 13.11), lat=c(52.40,52.52, 52.36, 52.45))
-map <- pointsMap(d, scale=FALSE)
+map <- pointsMap(lat,long,d, scale=FALSE, zoom=9)
 coord <- scaleBar(map)  ; coord
 scaleBar(map, bg=berryFunctions::addAlpha("white", 0.7))
-scaleBar(map, 0.3, 0.05, unit="m", length=0.1, type="line")
-scaleBar(map, 0.3, 0.5, unit="km", abslen=4, ndiv=4, col=4:5, lwd=3)
+scaleBar(map, 0.3, 0.05, unit="m", length=0.45, type="line")
+scaleBar(map, 0.3, 0.5, unit="km", abslen=5, col=4:5, lwd=3)
 scaleBar(map, 0.3, 0.8, unit="mi", col="red", targ=list(col="blue", font=2), type="line")
 
-# I don't support subdivisions, but if you wanted them, you could use:
+# I don't like subdivisions, but if you wanted them, you could use:
 scaleBar(map, 0.12, 0.28, abslen=10, adj=c(0.5, -1.5)  )
-scaleBar(map, 0.12, 0.28, abslen=4, adj=c(0.5, -1.5), label="" )
+scaleBar(map, 0.12, 0.28, abslen=4, adj=c(0.5, -1.5), targs=list(col="transparent"), label="" )
 }
 
 \dontrun{ ## Too much downloading time, too error-prone
 # Tests around the world
 par(mfrow=c(1,2), mar=rep(1,4))
 long <- runif(2, -180, 180) ;  lat <- runif(2, -90, 90)
-map <- pointsMap(data.frame(long,lat))
-map2 <- pointsMap(data.frame(long,lat), map=map, utm=TRUE)
+map <- pointsMap(lat, long)
+map2 <- pointsMap(lat, long, map=map, utm=TRUE)
 }
 
 }
