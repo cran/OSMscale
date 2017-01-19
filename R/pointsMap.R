@@ -22,7 +22,7 @@
 #' 43.232649, -123.355895")
 #'
 #' map <- pointsMap(lat, long, data=d)
-#' map_utm <- pointsMap(lat, long, d, map=map, utm=TRUE)
+#' map_utm <- pointsMap(lat, long, d, map=map, proj=putm(d$long))
 #' axis(1); axis(2) # now in meters
 #' projectPoints(d$lat, d$long)
 #' scaleBar(map_utm, x=0.2, y=0.8, unit="mi", type="line", col="red", length=0.25)
@@ -37,14 +37,14 @@
 #' @param ext Extension added in each direction if a single coordinate is given. DEFAULT: 0.07
 #' @param fx,fy Extend factors (additional map space around actual points)
 #'              passed to custom version of \code{\link{extendrange}}. DEFAULT: 0.05
-#' @param type Tile server in \code{\link[OpenStreetMap]{openmap}}
+#' @param type Tile server in \code{OpenStreetMap::\link[OpenStreetMap]{openmap}}.
+#'             For an overview, see \url{http://blog.fellstat.com/?p=356}
 #' @param zoom,minNumTiles,mergeTiles Arguments passed to \code{\link[OpenStreetMap]{openmap}}
 #' @param map Optional map object. If given, it is not downloaded again.
 #'            Useful to project maps in a second step. DEFAULT: NULL
-#' @param utm Logical: Convert map to UTM (or other \code{proj})?
-#'            Consumes some extra time. DEFAULT: FALSE
-#' @param proj proj4 character string or CRS object to project to.
-#'             Only used if utm=TRUE. DEFAULT: \code{\link{putm}(long=long)}
+#' @param proj If you want to reproject the map (Consumes some extra time), the
+#'             proj4 character string or CRS object to project to, e.g. \code{\link{putm}(long=long)}.
+#'             DEFAULT: NA (no conversion)
 #' @param plot Logical: Should map be plotted and points added? DEFAULT: TRUE
 #' @param add Logical: add points to existing map? DEFAULT: FALSE
 #' @param scale Logical: should \code{\link{scaleBar}} be added? DEFAULT: TRUE
@@ -65,8 +65,7 @@ zoom=NULL,
 minNumTiles=9L,
 mergeTiles=TRUE,
 map=NULL,
-utm=FALSE,
-proj=putm(long=long),
+proj=NA,
 plot=TRUE,
 add=FALSE,
 scale=TRUE,
@@ -107,17 +106,17 @@ if(is.null(map))
          type=type, zoom=zoom, minNumTiles=minNumTiles, mergeTiles=mergeTiles)
   }
 # optionally, projection
-if(utm & !quiet)
+if(!is.na(proj))
   {
-  message("Projecting map to ", proj, " ...")
+  if(!quiet) message("Projecting map to ", proj, " ...")
   flush.console()
+  map <- OpenStreetMap::openproj(map, projection=proj)
   }
-if(utm) map <- OpenStreetMap::openproj(map, projection=proj)
 # optionally, plotting:
 if(plot)
 {
 if(!quiet) {message("Done. Now plotting..."); flush.console()}
-if(!add) plot(map, removeMargin=FALSE) # plot.OpenStreetMap -> plot.osmtile -> rasterImage
+if(!add) plot(map, removeMargin=TRUE) # plot.OpenStreetMap -> plot.osmtile -> rasterImage
 pts <- projectPoints(lat,long, to=map$tiles[[1]]$projection)
 do.call(points, berryFunctions::owa(list(
         x=pts[,"x"], y=pts[,"y"], pch=pch, col=col, cex=cex), pargs))
