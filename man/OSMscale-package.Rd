@@ -2,8 +2,8 @@
 % Please edit documentation in R/OSMscale-package.R
 \docType{package}
 \name{OSMscale-package}
-\alias{OSMscale}
 \alias{OSMscale-package}
+\alias{OSMscale}
 \title{Add a Scalebar to OpenStreetMap Plots}
 \description{
 Functionality to handle and project lat-long coordinates,
@@ -16,6 +16,7 @@ Get the most recent code updates at \url{https://github.com/brry/OSMscale}
 }
 \examples{
 
+\donttest{ # Not tested on CRAN to avoid download time
 d <- read.table(sep=",", header=TRUE, text=
 "lat, long
 55.685143, 12.580008
@@ -26,18 +27,18 @@ d <- read.table(sep=",", header=TRUE, text=
 
 # zoom set to 3 to speed up tests. automatic zoom determination is better.
 map <- pointsMap(lat, long, data=d, type="maptoolkit-topo",
-                 utm=TRUE, scale=FALSE, zoom=3, pch=16, col=2)
+                 proj=putm(d$long), scale=FALSE, zoom=3, pch=16, col=2)
 scaleBar(map, abslen=500, y=0.8, cex=0.8)
 lines(projectPoints(d$lat, d$long), col="blue", lwd=2)
-
 }
-\author{
-Berry Boessenkool, \email{berry-b@gmx.de}, June 2016
+
 }
 \seealso{
 \code{\link{scaleBar}}, \code{\link{pointsMap}}, \code{\link{projectPoints}},
          mapmisc article at \url{https://journal.r-project.org/archive/2016-1/brown.pdf}
 }
+\author{
+Berry Boessenkool, \email{berry-b@gmx.de}, June 2016
+}
 \keyword{documentation}
 \keyword{package}
-

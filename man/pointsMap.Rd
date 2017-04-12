@@ -6,8 +6,9 @@
 \usage{
 pointsMap(lat, long, data, ext = 0.07, fx = 0.05, fy = fx, type = "osm",
   zoom = NULL, minNumTiles = 9L, mergeTiles = TRUE, map = NULL,
-  proj = NA, plot = TRUE, add = FALSE, scale = TRUE, quiet = FALSE,
-  pch = 3, col = "red", cex = 1, pargs = NULL, ...)
+  proj = NA, plot = TRUE, mar = c(0, 0, 0, 0), add = FALSE,
+  scale = TRUE, quiet = FALSE, pch = 3, col = "red", cex = 1,
+  pargs = NULL, ...)
 }
 \arguments{
 \item{lat, long}{Latitude (North/South) and longitude (East/West) coordinates in decimal degrees}
@@ -31,7 +32,11 @@ Useful to project maps in a second step. DEFAULT: NULL}
 proj4 character string or CRS object to project to, e.g. \code{\link{putm}(long=long)}.
 DEFAULT: NA (no conversion)}
 
-\item{plot}{Logical: Should map be plotted and points added? DEFAULT: TRUE}
+\item{plot}{Logical: Should map be plotted and points added? Plotting happens with
+\code{OpenStreetMap::\link[OpenStreetMap]{plot.OpenStreetMap}(map,
+removeMargin=FALSE)}. DEFAULT: TRUE}
+
+\item{mar}{Margins to be set first (and left unchanged). DEFAULT: c(0,0,0,0)}
 
 \item{add}{Logical: add points to existing map? DEFAULT: FALSE}
 
@@ -49,7 +54,7 @@ DEFAULT: NA (no conversion)}
 Map returned by \code{\link{openmap}}
 }
 \description{
-Download and plot map with the extend of a dataset with lat-long coordinates
+Download and plot map with the extend of a dataset with lat-long coordinates.
 }
 \examples{
 if(interactive()){
@@ -72,12 +77,11 @@ map <- pointsMap(lat,long,d, type="bing") # aerial map
 }
 
 }
-\author{
-Berry Boessenkool, \email{berry-b@gmx.de}, Jun 2016
-}
 \seealso{
 \code{\link{projectPoints}}, \code{OpenStreetMap::\link[OpenStreetMap]{openmap}}
 }
+\author{
+Berry Boessenkool, \email{berry-b@gmx.de}, Jun 2016
+}
 \keyword{hplot}
 \keyword{spatial}
-
