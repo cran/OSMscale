@@ -4,7 +4,7 @@
 \alias{earthDist}
 \title{distance between lat-long coordinates}
 \usage{
-earthDist(lat, long, data, r = 6371, i = 1L)
+earthDist(lat, long, data, r = 6371, i = 1L, along = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{lat, long}{Latitude (North/South) and longitude (East/West) coordinates in decimal degrees}
@@ -15,6 +15,12 @@ earthDist(lat, long, data, r = 6371, i = 1L)
 
 \item{i}{Integer: Index element against which all coordinate pairs
 are computed. DEFAULT: 1}
+
+\item{along}{Logical: Should distances be computed along vector of points?
+If TRUE, \code{i} is ignored. DEFAULT: FALSE}
+
+\item{quiet}{Logical: suppress non-df warning in \code{\link[berryFunctions]{getColumn}}? 
+DEFAULT: FALSE}
 }
 \value{
 Vector with distance(s) in km (or units of \code{r}, if \code{r} is changed)
@@ -37,6 +43,13 @@ earthDist(lat, long, d, i=2) # from London to B and T: 928 and 9562 km
 # install.packages("geosphere")
 # geosphere::distHaversine(as.matrix(d[1,2:1]), as.matrix(d[2,2:1])) / 1000
 
+# Distance along vector of points:
+d <- data.frame(lat=21:50, long=1:30)
+pointsMap(lat,long,d, zoom=2, proj=putm(1:30) )
+along1 <- earthDist(lat,long,d, along=TRUE)
+along2 <- c(0, sapply(2:nrow(d), function(i) earthDist(lat,long,data=d[i-1:0,])[2]))
+along1-along2 # all zero, but second version is MUCH slower for large datasets
+
 
 # compare with UTM distance
 set.seed(42)
@@ -53,7 +66,7 @@ points(d2$x[1],d2$y[1], pch=3, cex=2, lwd=2)
 
 }
 \seealso{
-\code{\link{degree}} for pre-formatting,
+\code{\link{maxEarthDist}}, \code{\link{degree}} for pre-formatting,
          \url{http://www.movable-type.co.uk/scripts/latlong.html}
 }
 \author{

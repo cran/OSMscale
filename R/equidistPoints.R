@@ -1,14 +1,14 @@
 #' Evenly spaced points along path
-#'
+#' 
 #' Compute waypoints with equal distance to each other along a (curved) path or track given by coordinates
-#'
-#'
+#' 
+#' 
 #' @return Dataframe with the coordinates of the final points.
 #'         ATTENTION: The columns are named x,y,z, not with the original names from the function call.
 #' @author Berry Boessenkool, \email{berry-b@@gmx.de}, May 2016
 #' @seealso \code{berryFunctions::\link[berryFunctions]{distance}} and \code{\link[berryFunctions]{approx2}}
 #' @keywords spatial
-#' @importFrom berryFunctions distance approx2
+#' @importFrom berryFunctions distance approx2 getColumn
 #' @export
 #' @examples
 #' library(berryFunctions) # distance, colPoints etc
@@ -20,7 +20,7 @@
 #' points(equidistPoints(x,y, n=10, nint=1), col=2) # from original point set
 #' round(distance(eP$x, eP$y), 2) # the 2.69 instead of 4.50 is in the sharp curve
 #' # These points are quidistant along the original track
-#'
+#' 
 #' plot(x,y, type="o", pch=16, col=2)
 #' round(sort(distance(x,y)), 2)
 #' xn <- equidistPoints(x,y, n=10)$x
@@ -35,19 +35,19 @@
 #' print(round(sort(distance(xn,yn)), 2))
 #' } # We may recursively get closer to equidistant along track _and_ air,
 #' # but never actually reach it.
-#'
+#' 
 #' # Real dataset:
 #' data(biketrack)
-#' colPoints(lon, lat, ele, data=biketrack, add=FALSE, asp=1, pch=4, lines=TRUE)
+#' colPoints("lon","lat","ele",data=biketrack, add=FALSE,asp=1,pch=4,lines=TRUE)
 #' points(equidistPoints(lon, lat, data=biketrack, n=25), pch=3, lwd=3, col=2)
 #' bt2 <- equidistPoints(lon, lat, ele, data=biketrack, n=25)
 #' bt2$dist <- distance(bt2$x, bt2$y)*1000
-#' colPoints(x, y, z, data=bt2, legend=FALSE)
+#' colPoints("x", "y", "z", data=bt2, legend=FALSE)
 #' # in curves, crow-distance is shorter sometimes
 #' plot(lat~lon, data=biketrack, asp=1, type="l")
-#' colPoints(x, y, dist, data=bt2, Range=c(2.5,4), add=TRUE, asp=1, pch=3, lwd=5)
+#' colPoints("x","y","dist",data=bt2, Range=c(2.5,4),add=TRUE,asp=1,pch=3,lwd=5)
 #' lines(lat~lon, data=biketrack)
-#'
+#' 
 #' @param x,y,z Vectors with coordinates. z is optional and can be left empty
 #' @param data Optional: data.frame with the column names as given by x,y (and z)
 #' @param n Number of segments to create along the path (=number of points-1)
@@ -55,8 +55,10 @@
 #'            Larger numbers give more precisely equidistant points, but increase computing time.
 #'            \code{int=1} to not do any interpolation. DEFAULT: 30
 #' @param mid Logical: Should centers of segments be returned instead of their ends?
+#' @param quiet Logical: suppress non-df warning in \code{\link[berryFunctions]{getColumn}}? 
+#'              DEFAULT: FALSE
 #' @param \dots Further arguments passed to \code{\link{approx}}
-#'
+#' 
 equidistPoints <- function(
 x,
 y,
@@ -65,6 +67,7 @@ data,
 n,
 nint=30,
 mid=FALSE,
+quiet=FALSE,
 ...
 )
 {
@@ -73,9 +76,9 @@ doz <- !missing(z) # do z interpolation along with x and y?
 # data.frame columns:
 if(!missing(data)) # get x, y and z from data.frame
    {
-           x <- data[ , deparse(substitute(x))]
-           y <- data[ , deparse(substitute(y))]
-   if(doz) z <- data[ , deparse(substitute(z))]
+           x <- getColumn(substitute(x), data, quiet=quiet)
+           y <- getColumn(substitute(y), data, quiet=quiet)
+   if(doz) z <- getColumn(substitute(z), data, quiet=quiet)
    }
 # input checks coordinates:
 x <- as.vector(x)

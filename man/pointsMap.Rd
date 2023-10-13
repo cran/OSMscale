@@ -4,11 +4,32 @@
 \alias{pointsMap}
 \title{Get map for lat-long points}
 \usage{
-pointsMap(lat, long, data, ext = 0.07, fx = 0.05, fy = fx, type = "osm",
-  zoom = NULL, minNumTiles = 9L, mergeTiles = TRUE, map = NULL,
-  proj = NA, plot = TRUE, mar = c(0, 0, 0, 0), add = FALSE,
-  scale = TRUE, quiet = FALSE, pch = 3, col = "red", cex = 1,
-  pargs = NULL, ...)
+pointsMap(
+  lat,
+  long,
+  data,
+  ext = 0.07,
+  fx = 0.05,
+  fy = fx,
+  type = "osm",
+  zoom = NULL,
+  minNumTiles = 9L,
+  mergeTiles = TRUE,
+  map = NULL,
+  proj = NA,
+  plot = TRUE,
+  mar = c(0, 0, 0, 0),
+  add = FALSE,
+  scale = TRUE,
+  quiet = FALSE,
+  pch = 3,
+  col = "red",
+  cex = 1,
+  bg = NA,
+  pargs = NULL,
+  titleargs = NULL,
+  ...
+)
 }
 \arguments{
 \item{lat, long}{Latitude (North/South) and longitude (East/West) coordinates in decimal degrees}
@@ -21,7 +42,8 @@ pointsMap(lat, long, data, ext = 0.07, fx = 0.05, fy = fx, type = "osm",
 passed to custom version of \code{\link{extendrange}}. DEFAULT: 0.05}
 
 \item{type}{Tile server in \code{OpenStreetMap::\link[OpenStreetMap]{openmap}}.
-For an overview, see \url{http://blog.fellstat.com/?p=356}}
+For an overview, see \url{https://blog.fellstat.com/?p=356} and
+\code{\link{mapComp}}. DEFAULT: "osm"}
 
 \item{zoom, minNumTiles, mergeTiles}{Arguments passed to \code{\link[OpenStreetMap]{openmap}}}
 
@@ -42,16 +64,20 @@ removeMargin=FALSE)}. DEFAULT: TRUE}
 
 \item{scale}{Logical: should \code{\link{scaleBar}} be added? DEFAULT: TRUE}
 
-\item{quiet}{Logical: suppress progress messages? DEFAULT: FALSE}
+\item{quiet}{Logical: suppress progress messages and non-df warning in 
+\code{\link[berryFunctions]{getColumn}}? DEFAULT: FALSE}
 
-\item{pch, col, cex}{Arguments passed to \code{\link{points}}. DEFAULT: 3, "red", 1}
+\item{pch, col, cex, bg}{Arguments passed to \code{\link{points}},
+see \code{pargs} for more. DEFAULT: pch=3, col="red", cex=1, bg=NA}
 
-\item{pargs}{List of arguments passed to \code{\link{points}} like lwd, type, cex...}
+\item{pargs}{List of arguments passed to \code{\link{points}} like lwd, type, cex, ...}
+
+\item{titleargs}{List of arguments passed to \code{\link{title}} (if not NULL). DEFAULT: NULL}
 
 \item{\dots}{Further arguments passed to \code{\link{scaleBar}} like abslen, ndiv, ...}
 }
 \value{
-Map returned by \code{\link{openmap}}
+Map returned by \code{OpenStreetMap::\link{openmap}}
 }
 \description{
 Download and plot map with the extend of a dataset with lat-long coordinates.
@@ -66,8 +92,9 @@ d <- read.table(sep=",", header=TRUE, text=
 43.232649, -123.355895")
 
 map <- pointsMap(lat, long, data=d)
+axis(1, line=-2); axis(2, line=-2) # in whatever unit
 map_utm <- pointsMap(lat, long, d, map=map, proj=putm(d$long))
-axis(1); axis(2) # now in meters
+axis(1, line=-2); axis(2, line=-2) # now in meters
 projectPoints(d$lat, d$long)
 scaleBar(map_utm, x=0.2, y=0.8, unit="mi", type="line", col="red", length=0.25)
 pointsMap(lat, long, d[1:2,], map=map_utm, add=TRUE, col="red", pch=3, pargs=list(lwd=3))

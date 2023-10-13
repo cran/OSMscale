@@ -4,8 +4,16 @@
 \alias{projectPoints}
 \title{Project lat-lon points}
 \usage{
-projectPoints(lat, long, data, from = pll(), to = putm(long = long),
-  spout = FALSE, dfout = TRUE, drop = FALSE, quiet = FALSE)
+projectPoints(
+  lat,
+  long,
+  data,
+  from = pll(),
+  to = putm(long = long),
+  dfout = TRUE,
+  drop = FALSE,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{lat, long}{Latitude (North/South) and longitude (East/West) coordinates in decimal degrees}
@@ -13,19 +21,18 @@ projectPoints(lat, long, data, from = pll(), to = putm(long = long),
 \item{data}{Optional: data.frame with the columns \code{lat} and \code{long}}
 
 \item{from}{Original Projection CRS (do not change for latlong-coordinates).
-DEFAULT: \code{\link{pll}()} = sp::CRS("+proj=longlat +datum=WGS84")}
+DEFAULT: \code{\link{pll}()} = sf::st_crs("+proj=longlat +datum=WGS84")}
 
 \item{to}{target projection CRS (Coordinate Reference System) Object.
-Other projections can be specified as sp::CRS("your_proj4_character_string").
+Other projections can be specified as \code{sf::\link[sf]{st_crs}("your_proj4_character_string")}.
 DEFAULT: \code{\link{putm}(long=long)}}
-
-\item{spout}{Return the original \code{\link[sp]{spTransform}} output instead of coordinates only? DEFAULT: FALSE}
 
 \item{dfout}{Convert output to data.frame to allow easier indexing? DEFAULT: TRUE}
 
 \item{drop}{Drop to lowest dimension? DEFAULT: FALSE (unlike \code{\link[OpenStreetMap]{projectMercator}})}
 
-\item{quiet}{Suppress warning about NA coordinates? DEFAULT: FALSE}
+\item{quiet}{Suppress warning about NA coordinates and non-df warning in 
+\code{\link[berryFunctions]{getColumn}}? DEFAULT: FALSE}
 }
 \value{
 data.frame (or matrix, if \code{dfout=FALSE})  with points in new projection
@@ -38,7 +45,7 @@ Basics copied from \code{OpenStreetMap::\link[OpenStreetMap]{projectMercator}}
 library("OpenStreetMap")
 lat <- runif(100, 6, 12)
 lon <- runif(100, 48, 58)
-plot(lat,lon)
+plot(lat,lon, main="flat earth unprojected")
 plot(projectMercator(lat,lon), main="Mercator")
 plot(projectPoints(lat,lon), main="UTM32")
 stopifnot(all( projectPoints(lat,lon, to=posm()) == projectMercator(lat,lon) ))
@@ -55,7 +62,7 @@ d <- data.frame(N=runif(50,5734000,6115000), E=runif(50, 33189000,33458000))
 d$VALUES <- berryFunctions::rescale(d$N, 20,40) + rnorm(50, sd=5)
 head(d)
 c1 <- projectPoints(lat=d$N, long=d$E-33e6, to=pll(),
-          from=sp::CRS("+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs") )
+          from=sf::st_crs("+proj=utm +zone=33 +ellps=GRS80 +units=m +no_defs") )
 c2 <- projectPoints(y, x, data=c1, to=posm() )
 head(c1)
 head(c2)
@@ -71,14 +78,14 @@ scaleBar(map, y=0.2, abslen=100)
 points(c2)
 berryFunctions::colPoints(c2$x, c2$y, d$VALUE )
 dev.off()
-system2("open", "ETRS89.pdf")  # on Linux, try "xdg-open"
+berryFunctions::openFile("ETRS89.pdf")
 #unlink("ETRS89.pdf")
 }
 
 }
 \seealso{
 \code{\link{scaleBar}}, \code{OpenStreetMap::\link[OpenStreetMap]{projectMercator}},
-         \url{http://gis.stackexchange.com/a/74723}, \url{http://spatialreference.org} on proj4strings
+         \url{https://gis.stackexchange.com/a/74723}, \url{https://spatialreference.org} on proj4strings
 }
 \author{
 Berry Boessenkool, \email{berry-b@gmx.de}, Jun 2016

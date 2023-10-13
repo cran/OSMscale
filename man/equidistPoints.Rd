@@ -4,7 +4,7 @@
 \alias{equidistPoints}
 \title{Evenly spaced points along path}
 \usage{
-equidistPoints(x, y, z, data, n, nint = 30, mid = FALSE, ...)
+equidistPoints(x, y, z, data, n, nint = 30, mid = FALSE, quiet = FALSE, ...)
 }
 \arguments{
 \item{x, y, z}{Vectors with coordinates. z is optional and can be left empty}
@@ -18,6 +18,9 @@ Larger numbers give more precisely equidistant points, but increase computing ti
 \code{int=1} to not do any interpolation. DEFAULT: 30}
 
 \item{mid}{Logical: Should centers of segments be returned instead of their ends?}
+
+\item{quiet}{Logical: suppress non-df warning in \code{\link[berryFunctions]{getColumn}}? 
+DEFAULT: FALSE}
 
 \item{\dots}{Further arguments passed to \code{\link{approx}}}
 }
@@ -56,14 +59,14 @@ print(round(sort(distance(xn,yn)), 2))
 
 # Real dataset:
 data(biketrack)
-colPoints(lon, lat, ele, data=biketrack, add=FALSE, asp=1, pch=4, lines=TRUE)
+colPoints("lon","lat","ele",data=biketrack, add=FALSE,asp=1,pch=4,lines=TRUE)
 points(equidistPoints(lon, lat, data=biketrack, n=25), pch=3, lwd=3, col=2)
 bt2 <- equidistPoints(lon, lat, ele, data=biketrack, n=25)
 bt2$dist <- distance(bt2$x, bt2$y)*1000
-colPoints(x, y, z, data=bt2, legend=FALSE)
+colPoints("x", "y", "z", data=bt2, legend=FALSE)
 # in curves, crow-distance is shorter sometimes
 plot(lat~lon, data=biketrack, asp=1, type="l")
-colPoints(x, y, dist, data=bt2, Range=c(2.5,4), add=TRUE, asp=1, pch=3, lwd=5)
+colPoints("x","y","dist",data=bt2, Range=c(2.5,4),add=TRUE,asp=1,pch=3,lwd=5)
 lines(lat~lon, data=biketrack)
 
 }

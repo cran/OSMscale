@@ -4,11 +4,28 @@
 \alias{scaleBar}
 \title{scalebar for OSM plots}
 \usage{
-scaleBar(map, x = 0.1, y = 0.9, length = 0.4, abslen = NA,
-  unit = c("km", "m", "mi", "ft", "yd"), label = unit, type = c("bar",
-  "line"), ndiv = NA, field = "rect", fill = NA, adj = c(0.5, 1.5),
-  cex = par("cex"), col = c("black", "white"), targs = NULL, lwd = 7,
-  lend = 1, bg = "transparent", mar = c(2, 0.7, 0.2, 3), ...)
+scaleBar(
+  map,
+  x = 0.1,
+  y = 0.9,
+  length = 0.4,
+  abslen = NA,
+  unit = c("km", "m", "mi", "ft", "yd"),
+  label = unit,
+  type = c("bar", "line"),
+  ndiv = NA,
+  field = "rect",
+  fill = NA,
+  adj = c(0.5, 1.5),
+  cex = par("cex"),
+  col = c("black", "white"),
+  targs = NULL,
+  lwd = 7,
+  lend = 1,
+  bg = "transparent",
+  mar = c(2, 0.7, 0.2, 3),
+  ...
+)
 }
 \arguments{
 \item{map}{Map object with map$tiles[[1]]$projection to get the projection from.}
@@ -62,6 +79,12 @@ There, the axes are not in meters, but rather ca 0.7m units (for NW Germany area
 Accordingly, other packages plot wrong bars, see the last example section.
 }
 \examples{
+
+plot(0:10, 40:50, type="n", asp=1) # Western Europe in lat-long
+map <- list(tiles=list(dummy=list(projection=pll())),
+            bbox=list(p1=par("usr")[c(1,4)], p2=par("usr")[2:3]) )
+scaleBar(map)
+
 if(interactive()){
 d <- data.frame(long=c(12.95, 12.98, 13.22, 13.11), lat=c(52.40,52.52, 52.36, 52.45))
 map <- pointsMap(lat,long,d, scale=FALSE, zoom=9)
@@ -72,8 +95,13 @@ scaleBar(map, 0.3, 0.5, unit="km", abslen=5, col=4:5, lwd=3)
 scaleBar(map, 0.3, 0.8, unit="mi", col="red", targ=list(col="blue", font=2), type="line")
 
 # I don't like subdivisions, but if you wanted them, you could use:
-scaleBar(map, 0.12, 0.28, abslen=10, adj=c(0.5, -1.5)  )
-scaleBar(map, 0.12, 0.28, abslen=4, adj=c(0.5, -1.5), targs=list(col="transparent"), label="" )
+sb <- scaleBar(map, 0.12, 0.28, abslen=10, adj=c(0.5, -1.5)  )
+scaleBar(map, 0.12, 0.28, abslen=4, adj=c(0.5, -1.5), 
+         targs=list(col="transparent"), label="" )
+
+# more lines for exact measurements in scalebar:
+segments(x0=seq(sb["x1"], sb["x2"], len=21), y0=sb["y1"], y1=sb["y2"], col=8)
+rect(xleft=sb["x1"], xright=sb["x2"], ybottom=sb["y1"], ytop=sb["y2"])
 }
 
 \dontrun{ # don't download too many maps in R CMD check
@@ -111,7 +139,7 @@ SDMTools::Scalebar(x=1443391,y=6889679,distance=10000)
 raster::scalebar(d=10000, xy=c(1443391,6884254))
 OSMscale::scaleBar(map, x=0.35, y=0.45, abslen=5)
 library(mapmisc) # otherwise rbind for SpatialPoints is not found
-mapmisc::scaleBar(map$tiles[[1]]$projection, seg.len=10, pos="center", bg="transparent")
+mapmisc::scaleBar(pmap(map)@projargs, seg.len=10, pos="center", bg="transparent")
 }
 
 }

@@ -1,13 +1,12 @@
 #' decimal degree coordinate conversion
-#'
+#' 
 #' Convert latitude-longitude coordinates
 #' between decimal representation and degree-minute-second notation
-#'
+#' 
 #' @return data.frame with x and y as character strings or numerical values,
 #'         depending on conversion direction
 #' @author Berry Boessenkool, \email{berry-b@@gmx.de}, Aug 2016
-#' @seealso \code{\link{earthDist}}, \code{\link{projectPoints}} for geographical reprojection,
-#'          \code{sp::\link[sp]{char2dms}}
+#' @seealso \code{\link{earthDist}}, \code{\link{projectPoints}} for geographical reprojection
 #' @keywords spatial character
 #' @importFrom berryFunctions l2df getColumn
 #' @export
@@ -17,25 +16,25 @@
 #' degree(c(52.366360, -32.599203), c(13.024181,-55.809601))
 #' degree(52.366360, 13.024181, drop=TRUE) # vector
 #' degree(47.001, -13.325731, digits=5)
-#'
+#' 
 #' # Use table with values instead of single vectors:
 #' d <- read.table(header=TRUE, sep=",", text="
 #' lat, long
 #'  52.366360,  13.024181
 #' -32.599203, -55.809601")
 #' degree(lat, long, data=d)
-#'
+#' 
 #' # DMS to DECIMAL notation: --------------------------------------------------
 #' # You can use the degree symbol and escaped quotation mark (\") as well.
 #' degree("52'21'58.9'N", "13'1'27.1'E")
 #' print(degree("52'21'58.9'N", "13'1'27.1'E"), digits=15)
-#'
+#' 
 #' d2 <- read.table(header=TRUE, stringsAsFactors=FALSE, text="
 #' lat long
 #' 52'21'58.9'N 13'01'27.1'E
 #' 32'35'57.1'S 55'48'34.6'W") # columns cannot be comma-separated!
 #' degree(lat, long, data=d2)
-#'
+#' 
 #' # Rounding error checks: ----------------------------------------------------
 #' oo <- options(digits=15)
 #' d
@@ -43,7 +42,7 @@
 #' degree(lat, long, data=degree(lat, long, d, digits=3))
 #' options(oo)
 #' stopifnot(all(degree(lat,long,data=degree(lat,long,d, digits=3))==d))
-#'
+#' 
 #' @param lat,long Latitude (North/South) and longitude (East/West) coordinates in decimal degrees
 #' @param data Optional: data.frame with the columns \code{lat} and \code{long}
 #' @param todms Logical specifying direction of conversion.
@@ -52,21 +51,24 @@
 #'              DEFAULT: !is.character(lat)
 #' @param digits Number of digits the seconds are \code{\link{round}ed} to. DEFAULT: 1
 #' @param drop Drop to lowest dimension? DEFAULT: FALSE
-#'
+#' @param quiet Logical: suppress non-df warning in \code{\link[berryFunctions]{getColumn}}? 
+#'              DEFAULT: FALSE
+#' 
 degree <- function(
 lat,
 long,
 data,
 todms=!is.character(lat),
 digits=1,
-drop=FALSE
+drop=FALSE,
+quiet=FALSE
 )
 {
 # Input coordinates:
 if(!missing(data)) # get lat and long from data.frame
   {
-  lat  <- getColumn(substitute(lat) , data)
-  long <- getColumn(substitute(long), data)
+  lat  <- getColumn(substitute(lat) , data, quiet=quiet)
+  long <- getColumn(substitute(long), data, quiet=quiet)
   }
 # decimal to DMS
 if(todms)

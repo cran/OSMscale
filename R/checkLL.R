@@ -1,7 +1,7 @@
 #' lat-long coordinate check
-#'
+#' 
 #' check lat-long coordinates for plausibility
-#'
+#' 
 #' @return Invisible T/F vector showing which of the coordinates is violated
 #'         in the order: minlat, maxlat, minlong, maxlong.
 #'         Only returned if check is passed or fun != stop
@@ -14,40 +14,43 @@
 #' checkLL(lat=52, long=130)
 #' checkLL(130, 52, fun=message)
 #' checkLL(85:95, 0, fun=message)
-#'
+#' 
 #' d <- data.frame(x=0, y=0)
 #' checkLL(y,x, d)
-#'
+#' 
 #' # informative errors:
 #' library("berryFunctions")
 #' is.error(   checkLL(85:95, 0, fun="message"),  tell=TRUE)
 #' is.error(   checkLL(170,35),  tell=TRUE)
-#'
+#' 
 #' mustfail <- function(expr) stopifnot(berryFunctions::is.error(expr))
 #' mustfail( checkLL(100)         )
 #' mustfail( checkLL(100, 200)    )
 #' mustfail( checkLL(-100, 200)   )
 #' mustfail( checkLL(90.000001, 0)   )
-#'
+#' 
 #' @param lat,long Latitude (North/South) and longitude (East/West) coordinates in decimal degrees
 #' @param data Optional: data.frame with the columns \code{lat} and \code{long}
 #' @param fun One of the functions \code{\link{stop}}, \code{\link{warning}},
 #'            or \code{\link{message}}. DEFAULT: stop
+#' @param quiet    Logical: suppress non-df warning in \code{\link[berryFunctions]{getColumn}}? 
+#'                 DEFAULT: FALSE
 #' @param \dots Further arguments passed to \code{fun}
-#'
+#' 
 checkLL <- function(
 lat,
 long,
 data,
 fun=stop,
+quiet=FALSE,
 ...
 )
 {
 # Input coordinates:
 if(!missing(data)) # get lat and long from data.frame
   {
-  lat  <- getColumn(substitute(lat) , data)
-  long <- getColumn(substitute(long), data)
+  lat  <- getColumn(substitute(lat) , data, quiet=quiet)
+  long <- getColumn(substitute(long), data, quiet=quiet)
   }
 if(is.character(fun)) stop("fun must be unquoted. Use fun=", fun, " instead of fun='", fun,"'.")
 # tracing the calling function(s):

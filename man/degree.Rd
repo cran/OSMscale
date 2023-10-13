@@ -4,8 +4,15 @@
 \alias{degree}
 \title{decimal degree coordinate conversion}
 \usage{
-degree(lat, long, data, todms = !is.character(lat), digits = 1,
-  drop = FALSE)
+degree(
+  lat,
+  long,
+  data,
+  todms = !is.character(lat),
+  digits = 1,
+  drop = FALSE,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{lat, long}{Latitude (North/South) and longitude (East/West) coordinates in decimal degrees}
@@ -20,6 +27,9 @@ DEFAULT: !is.character(lat)}
 \item{digits}{Number of digits the seconds are \code{\link{round}ed} to. DEFAULT: 1}
 
 \item{drop}{Drop to lowest dimension? DEFAULT: FALSE}
+
+\item{quiet}{Logical: suppress non-df warning in \code{\link[berryFunctions]{getColumn}}? 
+DEFAULT: FALSE}
 }
 \value{
 data.frame with x and y as character strings or numerical values,
@@ -44,7 +54,7 @@ lat, long
 degree(lat, long, data=d)
 
 # DMS to DECIMAL notation: --------------------------------------------------
-# You can use the degree symbol and escaped quotation mark (\\") as well.
+# You can use the degree symbol and escaped quotation mark (\") as well.
 degree("52'21'58.9'N", "13'1'27.1'E")
 print(degree("52'21'58.9'N", "13'1'27.1'E"), digits=15)
 
@@ -64,8 +74,7 @@ stopifnot(all(degree(lat,long,data=degree(lat,long,d, digits=3))==d))
 
 }
 \seealso{
-\code{\link{earthDist}}, \code{\link{projectPoints}} for geographical reprojection,
-         \code{sp::\link[sp]{char2dms}}
+\code{\link{earthDist}}, \code{\link{projectPoints}} for geographical reprojection
 }
 \author{
 Berry Boessenkool, \email{berry-b@gmx.de}, Aug 2016

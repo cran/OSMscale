@@ -1,11 +1,11 @@
 #' scalebar for OSM plots
-#'
+#' 
 #' Add a scalebar to default or (UTM)-projected OpenStreetMap plots
-#'
+#' 
 #' @details scaleBar gets the right distance in the default mercator projected maps.
 #' There, the axes are not in meters, but rather ca 0.7m units (for NW Germany area maps with 20km across).
 #' Accordingly, other packages plot wrong bars, see the last example section.
-#'
+#' 
 #' @return invisible: coordinates of scalebar and label
 #' @author Berry Boessenkool, \email{berry-b@@gmx.de}, Jun 2016
 #' @seealso \code{\link{pointsMap}}, \code{\link{projectPoints}}
@@ -17,6 +17,12 @@
 #' @importFrom stats quantile
 #' @export
 #' @examples
+#' 
+#' plot(0:10, 40:50, type="n", asp=1) # Western Europe in lat-long
+#' map <- list(tiles=list(dummy=list(projection=pll())),
+#'             bbox=list(p1=par("usr")[c(1,4)], p2=par("usr")[2:3]) )
+#' scaleBar(map)
+#' 
 #' if(interactive()){
 #' d <- data.frame(long=c(12.95, 12.98, 13.22, 13.11), lat=c(52.40,52.52, 52.36, 52.45))
 #' map <- pointsMap(lat,long,d, scale=FALSE, zoom=9)
@@ -25,12 +31,17 @@
 #' scaleBar(map, 0.3, 0.05, unit="m", length=0.45, type="line")
 #' scaleBar(map, 0.3, 0.5, unit="km", abslen=5, col=4:5, lwd=3)
 #' scaleBar(map, 0.3, 0.8, unit="mi", col="red", targ=list(col="blue", font=2), type="line")
-#'
+#' 
 #' # I don't like subdivisions, but if you wanted them, you could use:
-#' scaleBar(map, 0.12, 0.28, abslen=10, adj=c(0.5, -1.5)  )
-#' scaleBar(map, 0.12, 0.28, abslen=4, adj=c(0.5, -1.5), targs=list(col="transparent"), label="" )
+#' sb <- scaleBar(map, 0.12, 0.28, abslen=10, adj=c(0.5, -1.5)  )
+#' scaleBar(map, 0.12, 0.28, abslen=4, adj=c(0.5, -1.5), 
+#'          targs=list(col="transparent"), label="" )
+#' 
+#' # more lines for exact measurements in scalebar:
+#' segments(x0=seq(sb["x1"], sb["x2"], len=21), y0=sb["y1"], y1=sb["y2"], col=8)
+#' rect(xleft=sb["x1"], xright=sb["x2"], ybottom=sb["y1"], ytop=sb["y2"])
 #' }
-#'
+#' 
 #' \dontrun{ # don't download too many maps in R CMD check
 #' d <- read.table(header=TRUE, sep=",", text="
 #' lat, long
@@ -40,13 +51,13 @@
 #' map <- pointsMap(lat, long, d, zoom=2, abslen=5000, y=0.7)
 #' scaleBar(map, y=0.5, abslen=5000)   # in mercator projections, scale bars are not
 #' scaleBar(map, y=0.3, abslen=5000)   # transferable to other latitudes
-#'
+#' 
 #' map_utm <- pointsMap(lat, long, d[1:2,], proj=putm(long=d$long[1:2]),
 #'                      zoom=4, y=0.7, abslen=500)
 #' scaleBar(map_utm, y=0.5, abslen=500) # transferable in UTM projection
 #' scaleBar(map_utm, y=0.3, abslen=500)
 #' }
-#'
+#' 
 #' \dontrun{ ## Too much downloading time, too error-prone
 #' # Tests around the world
 #' par(mfrow=c(1,2), mar=rep(1,4))
@@ -55,7 +66,7 @@
 #' map <- pointsMap(lat, long)
 #' map2 <- pointsMap(lat, long, map=map, proj=putm(long=long))
 #' }
-#'
+#' 
 #' \dontrun{ ## excluded from tests to avoid package dependencies
 #' berryFunctions::require2("SDMTools")
 #' berryFunctions::require2("raster")
@@ -66,9 +77,9 @@
 #' raster::scalebar(d=10000, xy=c(1443391,6884254))
 #' OSMscale::scaleBar(map, x=0.35, y=0.45, abslen=5)
 #' library(mapmisc) # otherwise rbind for SpatialPoints is not found
-#' mapmisc::scaleBar(map$tiles[[1]]$projection, seg.len=10, pos="center", bg="transparent")
+#' mapmisc::scaleBar(pmap(map)@projargs, seg.len=10, pos="center", bg="transparent")
 #' }
-#'
+#' 
 #' @param map Map object with map$tiles[[1]]$projection to get the projection from.
 #' @param x,y Relative position of left end of scalebar. DEFAULT: 0.1, 0.9
 #' @param length Approximate relative length of bar. DEFAULT: 0.4
@@ -93,7 +104,7 @@
 #' @param \dots Further arguments passed to \code{\link{segments}} like lty.
 #'              (Color for segments is the first value of \code{col}).
 #'              Passed to \code{\link{rect}} if \code{type="bar"}, like lwd.
-#'
+#' 
 scaleBar <- function(
 map,
 x=0.1,
@@ -124,7 +135,7 @@ if(y<0) stop("y must be larger than 0, not ", y)
 if(x>1) stop("x must be lesser than 1, not ", x)
 if(y>1) stop("y must be lesser than 1, not ", y)
 # map projection:
-crs <- map$tiles[[1]]$projection
+crs <- pmap(map)
 # factor:
 unit <- unit[1]
 if(!is.character(unit)) stop("unit must be a character string, not a ", class(unit))
@@ -170,25 +181,16 @@ if(is.na(ndiv)) ndiv <- which.min( abslen%%1:6 - c(0, 0.2, 0.3, 0.4, 0.5, 0.1) )
 # DEFINITE end point:
 x2 <- x1 + abslen*f # works for UTM with axis in m, but not for e.g. mercator projection
 # Solution: many points along the graph, project, select the one closest to x1+abslen
-if(substr(crs, 7, 9) != "utm")
+oldprojstring <- if(inherits(crs,"crs")) crs$input else crs@projargs # sf vs sp
+if(substr(oldprojstring, 7, 9) != "utm")
   {
-  findpoint <- function(a=x1,b=r[2], n=1)
-    {
-    xy_x <- seq(a, b, len=50)
-    xy_ll <- projectPoints(rep(y,50+1), c(x1,xy_x), to=pll(), from=crs)
-    xy_d <- earthDist(xy_ll$y, xy_ll$x)*1000/f # in units
-    if(abslen>tail(xy_d,1)) stop(paste0(berryFunctions::traceCall(3,"",": "),
-       "abslen dictates that the scale bar must go beyond the right edge of the map.",
-       "\nThis is currently not possible. If you need it, ",
-       "please send a request to berry-b@gmx.de"), call.=FALSE)
-    absdiff <- abs(xy_d-abslen)
-    #browser()
-    sel <- if(n==1) which.min(absdiff) else which(absdiff < quantile(absdiff,0.25))
-    xy_x[sel]
-  }
-  x2 <- findpoint(a=x1,    b=r[2],       n=2)
-  x2 <- findpoint(a=x2[1], b=tail(x2,1), n=2)
-  x2 <- findpoint(a=x2[1], b=tail(x2,1), n=1)
+  xy_x <- seq(x1, r[2], len=5000)
+  xy_ll <- projectPoints(rep(y,5000), xy_x, to=pll(), from=crs)
+  xy_d <- earthDist(xy_ll$y, xy_ll$x)*1000/f # in units
+  if(abslen>tail(xy_d,1)) stop(paste0("abslen dictates that the scale bar must go ",
+       "beyond the right edge of the map.\nThis is currently not possible. ",
+       "If you need it, please send a request to berry-b@gmx.de"))
+  x2 <- xy_x[which.min(abs(xy_d-abslen))]
   }
 #
 # draw scalebar ----------------------------------------------------------------
@@ -230,7 +232,7 @@ if(type=="bar")
 stop("type ", type, " is not implemented. Please use 'bar' or 'line'.")
 #
 # return absolute coordinates
-sb <- c(x1=x1, x2=x2, y=y, abslen=abslen, unit=f, ndiv=ndiv, label=xl)
+sb <- c(x1=x1, x2=x2, y1=y, y2=y2, abslen=abslen, unit=f, ndiv=ndiv, label=xl)
 names(sb)[5] <- paste("unit", unit, sep=":")
 return(invisible(sb))
 }
